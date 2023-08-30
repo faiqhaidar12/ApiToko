@@ -1,24 +1,24 @@
 @extends('layout.index')
-@section('title', 'Tambah Data Produk')
+@section('title', 'Edit Data Produk') <!-- Ubah judul sesuai dengan konteks -->
 @section('content')
     <div class="col-md-6">
-        <form method="POST" action="{{ '/produk/' . $data['id'] }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ route('produk.update', $data['id']) }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             <div class="card-body">
                 <div class="form-group">
                     <label for="title">Title</label>
-                    <input type="text" class="form-control" id="title" name="title" value="{{ $data['title'] }}"
-                        placeholder="Masukan Nama Pelanggan">
+                    <input type="text" class="form-control" id="title" name="title"
+                        value="{{ old('title', $data['title']) }}" placeholder="Masukkan Nama Produk">
                 </div>
                 <div class="form-group">
-                    <label for="description">Desc</label>
-                    <textarea name="description" class="form-control" id="description" cols="30" rows="10">{{ $data['description'] }}</textarea>
+                    <label for="description">Description</label>
+                    <textarea name="description" class="form-control" id="description" cols="30" rows="10">{{ old('description', $data['description']) }}</textarea>
                 </div>
                 <div class="form-group">
                     <label for="price">Price</label>
-                    <input type="number" class="form-control" id="price" name="price" value="{{ $data['price'] }}"
-                        placeholder="Masukan Harga">
+                    <input type="number" class="form-control" id="price" name="price"
+                        value="{{ old('price', $data['price']) }}" placeholder="Masukkan Harga">
                 </div>
                 <div class="form-group">
                     <label for="image">Image</label>

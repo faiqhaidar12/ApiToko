@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Produk;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
@@ -139,82 +143,52 @@ class ProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        $title = $request->title;
-        $description = $request->description;
-        $price = $request->price;
+        $dataProduk = Produk::find($id);
+
+        if (!$dataProduk) {
+            return redirect()->route('produk.index')
+                ->with('error', 'Produk tidak ditemukan.');
+        }
 
         // Validasi input
-        $this->validate($request, [
+        $validator = Validator::make($request->all(), [
             'title' => 'required',
             'description' => 'required',
             'price' => 'required',
+            'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $client = new Client();
-        $url = "http://127.0.0.1:8001/api/produk/$id";
+        if ($validator->fails()) {
+            return redirect()->route('produk.edit', $id)
+                ->withErrors($validator)
+                ->withInput();
+        }
 
-        // Mengecek apakah ada gambar yang diunggah
-        if ($request->hasFile('image')) {
-            $foto_file = $request->file('image');
-            $foto_ekstensi = $foto_file->getClientOriginalExtension();
-            $foto_nama = date('ymdhis') . "." . $foto_ekstensi;
-            $foto_file->move(public_path('image'), $foto_nama);
+        // Data yang akan dikirim ke API
+        $dataToSend = [
+            'title' => $request->input('title'),
+            'description' => $request->input('description'),
+            'price' => $request->input('price'),
+        ];
 
-            // Jika ada gambar yang diunggah, kirim permintaan dengan gambar baru
-            $response = $client->request('PUT', $url, [
-                'multipart' => [
-                    [
-                        'name' => 'title',
-                        'contents' => $title
-                    ],
-                    [
-                        'name' => 'description',
-                        'contents' => $description
-                    ],
-                    [
-                        'name' => 'price',
-                        'contents' => $price
-                    ],
-                    [
-                        'name' => 'image',
-                        'contents' => fopen(public_path('image') . '/' . $foto_nama, 'r')
-                    ]
-                ]
-            ]);
+        // Lakukan permintaan PUT ke URL API
+        $apiUrl = "http://127.0.0.1:8001/api/produk/$id"; // Ganti dengan URL API yang sesuai
+        $response = Http::put($apiUrl, $dataToSend);
+
+        // Periksa respons dari API
+        if ($response->successful()) {
+            return redirect()->route('produk.index')
+                ->with('success', 'Produk berhasil diperbarui!');
         } else {
-            // Jika tidak ada gambar yang diunggah, kirim permintaan tanpa bidang gambar
-            $response = $client->request('PUT', $url, [
-                'multipart' => [
-                    [
-                        'name' => 'title',
-                        'contents' => $title
-                    ],
-                    [
-                        'name' => 'description',
-                        'contents' => $description
-                    ],
-                    [
-                        'name' => 'price',
-                        'contents' => $price
-                    ]
-                ]
-            ]);
+            $error = $response->json()['data'] ?? ['message' => 'Terjadi kesalahan saat memperbarui data.'];
+            return redirect()->route('produk.edit', $id)
+                ->withErrors($error)
+                ->withInput();
         }
-
-        // Lanjutkan dengan penanganan respons seperti yang Anda lakukan sebelumnya
-        $content = $response->getBody()->getContents();
-        $contentArray = json_decode($content, true);
-        dd($contentArray);
-
-        if ($contentArray['status'] != true) {
-            $error = $contentArray['data'];
-            return redirect('produk/edit')->withErrors($error); // Kembalikan input yang sudah dimasukkan
-        }
-
-        return redirect('produk')->with('success', 'Berhasil Update Produk!');
     }
+
 
 
 

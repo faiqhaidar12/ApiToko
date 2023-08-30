@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Produk;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class ProdukController extends Controller
@@ -104,14 +105,13 @@ class ProdukController extends Controller
             ]);
         }
 
-        $rules = [
+        // Validasi input
+        $validator = Validator::make($request->all(), [
             'title' => 'required',
             'description' => 'required',
             'price' => 'required',
-            'image' => 'mimes:jpeg,png,jpg,gif|max:2048',
-        ];
-
-        $validator = Validator::make($request->all(), $rules);
+            'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
 
         if ($validator->fails()) {
             return response()->json([
@@ -121,32 +121,38 @@ class ProdukController extends Controller
             ]);
         }
 
+        // Simpan gambar lama sementara
+        $oldImage = $dataProduk->image;
+
+        // Update data produk
         $dataProduk->title = $request->title;
         $dataProduk->description = $request->description;
         $dataProduk->price = $request->price;
 
         if ($request->hasFile('image')) {
+            // Menghapus gambar lama jika ada
+            if ($oldImage) {
+                $oldImagePath = public_path('image') . '/' . $oldImage;
+
+                if (file_exists($oldImagePath)) {
+                    unlink($oldImagePath);
+                }
+            }
+
             $foto_file = $request->file('image');
-            $foto_ekstensi = $foto_file->extension();
+            $foto_ekstensi = $foto_file->getClientOriginalExtension();
             $foto_nama = date('ymdhis') . "." . $foto_ekstensi;
             $foto_file->move(public_path('image'), $foto_nama);
             $dataProduk->image = $foto_nama;
         }
 
-        $update = $dataProduk->save();
+        $dataProduk->save();
 
-        if ($update) {
-            return response([
-                'status' => true,
-                'message' => 'Produk berhasil diperbarui!',
-                'data' => $dataProduk,
-            ]);
-        } else {
-            return response()->json([
-                'status' => false,
-                'message' => 'Gagal memperbarui produk!',
-            ]);
-        }
+        return response()->json([
+            'status' => true,
+            'message' => 'Produk berhasil diperbarui!',
+            'data' => $dataProduk,
+        ]);
     }
 
 
