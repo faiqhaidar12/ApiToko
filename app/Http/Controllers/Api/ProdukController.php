@@ -5,26 +5,38 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Produk;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+
+use function PHPUnit\Framework\isEmpty;
 
 class ProdukController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $data = Produk::orderBy('title', 'asc')->get();
-        return response()->json(
-            [
+        $query = $request->input('query');
+
+        $data = Produk::when($query, function ($queryBuilder) use ($query) {
+            return $queryBuilder->where('nama_produk', 'like', '%' . $query . '%')
+                ->orWhere('deskripsi', 'like', '%' . $query . '%')
+                ->orWhere('harga', 'like', '%' . $query . '%');
+        })
+            ->orderBy('created_at', 'asc')
+            ->get();
+        if ($data->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Pencarian Produk Tidak Ada!!'
+            ], 404);
+        } else {
+            return response()->json([
                 'status' => true,
-                'message' => 'Produk ditemukan!',
+                'message' => 'Data Produk ditemukan!!',
                 'data' => $data
-            ],
-            200
-        );
+            ], 200);
+        }
     }
 
     /**
@@ -32,44 +44,49 @@ class ProdukController extends Controller
      */
     public function store(Request $request)
     {
-        $dataProduk = new Produk;
+        $data = new Produk();
 
         $rules = [
-            'title' => 'required',
-            'description' => 'required',
-            'price' => 'required',
-            'image' => 'mimes:jpeg,png,jpg,gif|max:2048',
+            'nama_produk' => "required",
+            'deskripsi' => "required",
+            'harga' => "required|numeric",
+            'gambar' => "image|mimes:jpeg,png,jpg,gif|max:2048", // Misalnya, batas ukuran 2MB dan jenis file gambar yang diizinkan.
         ];
-        $validator = Validator::make($request->all(), $rules);
 
+        $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
-                'message' => 'Gagal Menambahkan Produk!',
+                'message' => "Gagal Menambah Produk!!",
                 'data' => $validator->errors(),
-            ]);
+            ], 500);
         }
 
-        $dataProduk->title = $request->title;
-        $dataProduk->description = $request->description;
-        $dataProduk->price = $request->price;
+        $data->nama_produk = $request->nama_produk;
+        $data->deskripsi = $request->deskripsi;
+        $data->harga = $request->harga;
 
+        // Proses gambar jika ada dalam permintaan.
+        if ($request->hasFile('gambar')) {
+            $gambar = $request->file('gambar');
+            $namaGambar = time() . '.' . $gambar->getClientOriginalExtension();
+            $gambar->move(public_path('image'), $namaGambar);
+            $data->gambar = $namaGambar;
+        }
 
-        $foto_file = $request->file('image');
-        $foto_ekstensi = $foto_file->extension();
-        $foto_nama = date('ymdhis') . "." . $foto_ekstensi;
-        $foto_file->move(public_path('image'), $foto_nama);
-        $dataProduk->image = $foto_nama;
-
-        $simpan = $dataProduk->save();
-
-        return response([
-            'status' => true,
-            'message' => 'Berhasil Tambah Produk!',
-            'data' => $dataProduk,
-        ]);
+        $simpan = $data->save();
+        if ($simpan) {
+            return response()->json([
+                'status' => true,
+                'message' => "Berhasil Tambah Produk!!",
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => "Gagal Tambah Produk!!",
+            ], 500);
+        }
     }
-
 
     /**
      * Display the specified resource.
@@ -80,81 +97,82 @@ class ProdukController extends Controller
         if ($data) {
             return response()->json([
                 'status' => true,
-                'message' => 'Produk ditemukan!',
-                'data' => $data
+                'message' => 'Data Produk ditemukan!!',
+                'data' => $data,
             ], 200);
         } else {
             return response()->json([
                 'status' => false,
-                'message' => 'Produk Tidak ditemukan!',
-            ]);
+                'message' => 'Data Tidak ditemukan!!',
+            ], 404);
         }
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, string $id)
     {
-        $dataProduk = Produk::find($id);
+        $data = Produk::find($id);
 
-        if (!$dataProduk) {
+        if (empty($data)) {
             return response()->json([
                 'status' => false,
-                'message' => 'Produk tidak ditemukan.',
-            ]);
+                'message' => 'Data Tidak ditemukan!!',
+            ], 404);
         }
 
-        // Validasi input
-        $validator = Validator::make($request->all(), [
-            'title' => 'required',
-            'description' => 'required',
-            'price' => 'required',
-            'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+        $rules = [
+            'nama_produk' => "required",
+            'deskripsi' => "required",
+            'harga' => "required|numeric",
+        ];
+        // Tambahkan aturan validasi gambar hanya jika ada gambar yang diunggah.
+        if ($request->hasFile('gambar')) {
+            $rules['gambar'] = 'image|mimes:jpeg,png,jpg,gif|max:2048';
+        }
 
+        $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
-                'message' => 'Gagal memperbarui produk!',
+                'message' => "Gagal Menambah Produk!!",
                 'data' => $validator->errors(),
-            ]);
+            ], 500);
         }
 
-        // Simpan gambar lama sementara
-        $oldImage = $dataProduk->image;
+        $data->nama_produk = $request->nama_produk;
+        $data->deskripsi = $request->deskripsi;
+        $data->harga = $request->harga;
 
-        // Update data produk
-        $dataProduk->title = $request->title;
-        $dataProduk->description = $request->description;
-        $dataProduk->price = $request->price;
+        // Proses gambar jika ada dalam permintaan.
+        if ($request->hasFile('gambar')) {
+            $gambar = $request->file('gambar');
+            $namaGambar = time() . '.' . $gambar->getClientOriginalExtension();
+            $gambar->move(public_path('image'), $namaGambar);
 
-        if ($request->hasFile('image')) {
-            // Menghapus gambar lama jika ada
-            if ($oldImage) {
-                $oldImagePath = public_path('image') . '/' . $oldImage;
-
-                if (file_exists($oldImagePath)) {
-                    unlink($oldImagePath);
+            // Hapus gambar lama jika ada.
+            if (!empty($data->gambar)) {
+                $gambarLamaPath = public_path('image') . '/' . $data->gambar;
+                if (file_exists($gambarLamaPath)) {
+                    unlink($gambarLamaPath);
                 }
             }
-
-            $foto_file = $request->file('image');
-            $foto_ekstensi = $foto_file->getClientOriginalExtension();
-            $foto_nama = date('ymdhis') . "." . $foto_ekstensi;
-            $foto_file->move(public_path('image'), $foto_nama);
-            $dataProduk->image = $foto_nama;
+            $data->gambar = $namaGambar;
         }
-
-        $dataProduk->save();
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Produk berhasil diperbarui!',
-            'data' => $dataProduk,
-        ]);
+        $simpan = $data->save();
+        if ($simpan) {
+            return response()->json([
+                'status' => true,
+                'message' => "Berhasil Update Produk!!",
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => "Gagal Update Produk!!",
+            ], 500);
+        }
     }
-
 
 
     /**
@@ -162,19 +180,34 @@ class ProdukController extends Controller
      */
     public function destroy(string $id)
     {
-        $dataProduk = Produk::find($id);
-        if (empty($dataProduk)) {
+        $data = Produk::find($id);
+
+        if (empty($data)) {
             return response()->json([
                 'status' => false,
-                'message' => 'Produk Tidak Ada!'
+                'message' => 'Data Tidak ditemukan!!',
             ], 404);
         }
 
-        $simpan = $dataProduk->delete();
-        return response([
-            'status' => true,
-            'message' => 'Berhasil Hapus Produk!',
-            'data' => $dataProduk,
-        ]);
+        if (!empty($data->gambar)) {
+            $gambarPath = public_path('image') . '/' . $data->gambar;
+            if (file_exists($gambarPath)) {
+                unlink($gambarPath);
+            }
+        }
+
+        $simpan = $data->delete();
+
+        if ($simpan) {
+            return response()->json([
+                'status' => true,
+                'message' => "Berhasil Hapus Produk!!",
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => "Gagal Hapus Produk!!",
+            ], 500);
+        }
     }
 }

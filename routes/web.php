@@ -1,6 +1,7 @@
 <?php
 
-use App\Http\Controllers\ProductController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ProdukController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,5 +16,6 @@ use Illuminate\Support\Facades\Route;
 */
 
 
-Route::resource('/', ProductController::class);
-Route::resource('produk', ProductController::class);
+Route::resource('/home', OrderController::class);
+Route::post('/checkout', [OrderController::class, 'checkout']);
+Route::resource('produk', ProdukController::class);

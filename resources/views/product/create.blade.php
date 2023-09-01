@@ -6,22 +6,22 @@
             @csrf
             <div class="card-body">
                 <div class="form-group">
-                    <label for="title">Title</label>
-                    <input type="text" class="form-control" id="title" name="title"
-                        value="{{ Session::get('title') }}" placeholder="Masukan Nama Pelanggan">
+                    <label for="nama_produk">Title</label>
+                    <input type="text" class="form-control" id="nama_produk" name="nama_produk"
+                        value="{{ Session::get('nama_produk') }}" placeholder="Masukan Nama Pelanggan">
                 </div>
                 <div class="form-group">
-                    <label for="description">Desc</label>
-                    <textarea name="description" class="form-control" id="description" cols="30" rows="10">{{ Session::get('description') }}</textarea>
+                    <label for="deskripsi">Desc</label>
+                    <textarea name="deskripsi" class="form-control" id="deskripsi" cols="30" rows="10">{{ Session::get('deskripsi') }}</textarea>
                 </div>
                 <div class="form-group">
-                    <label for="price">Price</label>
-                    <input type="number" class="form-control" id="price" name="price"
-                        value="{{ Session::get('price') }}" placeholder="Masukan Harga">
+                    <label for="harga">Price</label>
+                    <input type="number" class="form-control" id="harga" name="harga"
+                        value="{{ Session::get('harga') }}" placeholder="Masukan Harga">
                 </div>
                 <div class="form-group">
-                    <label for="image">Image</label>
-                    <input type="file" name="image" id="image" class="form-control">
+                    <label for="gambar">Image</label>
+                    <input type="file" name="gambar" id="gambar" class="form-control">
                 </div>
                 <div>
                     <button type="submit" class="btn btn-primary mt-2">Simpan</button>

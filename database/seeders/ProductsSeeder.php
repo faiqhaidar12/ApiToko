@@ -15,12 +15,12 @@ class ProductsSeeder extends Seeder
     {
         $faker = Faker::create();
 
-        foreach (range(1, 50) as $index) {
-            DB::table('products')->insert([
-                'title' => $faker->word(10),
-                'description' => $faker->text(120),
-                'price' => $faker->numberBetween(1000, 100000),
-                'image' => ''
+        foreach (range(1, 20) as $index) {
+            DB::table('produk')->insert([
+                'nama_produk' => $faker->word(10),
+                'deskripsi' => $faker->text(50),
+                'harga' => $faker->numberBetween(1000, 100000),
+                'gambar' => ''
             ]);
         }
     }

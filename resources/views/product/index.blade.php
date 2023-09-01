@@ -11,10 +11,10 @@
                     <thead>
                         <tr>
                             <th>No</th>
-                            <th>Title</th>
-                            <th>Price</th>
-                            <th>Description</th>
-                            <th>Image</th>
+                            <th>Produk</th>
+                            <th>Harga</th>
+                            <th>Deskripsi</th>
+                            <th>Gambar</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -24,12 +24,12 @@
                             <?php $no++; ?>
                             <tr>
                                 <td>{{ $no }}</td>
-                                <td>{{ $item['title'] }}</td>
-                                <td>Rp {{ number_format($item['price'], 2) }}</td>
-                                <td>{{ $item['description'] }}</td>
+                                <td>{{ $item['nama_produk'] }}</td>
+                                <td>Rp {{ number_format($item['harga'], 2) }}</td>
+                                <td>{{ $item['deskripsi'] }}</td>
                                 <td>
-                                    @if ($item['image'])
-                                        <img src="{{ asset('image/' . $item['image']) }}" alt="{{ $item['title'] }}"
+                                    @if ($item['gambar'])
+                                        <img src="{{ asset('image/' . $item['gambar']) }}" alt="{{ $item['nama_produk'] }}"
                                             width="100">
                                     @else
                                         <span>No Image</span>

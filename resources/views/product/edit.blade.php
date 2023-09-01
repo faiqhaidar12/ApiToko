@@ -7,29 +7,28 @@
             @method('PUT')
             <div class="card-body">
                 <div class="form-group">
-                    <label for="title">Title</label>
-                    <input type="text" class="form-control" id="title" name="title"
-                        value="{{ old('title', $data['title']) }}" placeholder="Masukkan Nama Produk">
+                    <label for="nama_produk">Produk</label>
+                    <input type="text" class="form-control" id="nama_produk" name="nama_produk"
+                        placeholder="Masukkan Nama Produk" value="{{ $data['nama_produk'] }}">
                 </div>
                 <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea name="description" class="form-control" id="description" cols="30" rows="10">{{ old('description', $data['description']) }}</textarea>
+                    <label for="deskripsi">Deskripsi</label>
+                    <textarea name="deskripsi" class="form-control" id="deskripsi" cols="30" rows="10">{{ $data['deskripsi'] }}</textarea>
                 </div>
                 <div class="form-group">
-                    <label for="price">Price</label>
-                    <input type="number" class="form-control" id="price" name="price"
-                        value="{{ old('price', $data['price']) }}" placeholder="Masukkan Harga">
+                    <label for="harga">Harga</label>
+                    <input type="number" class="form-control" id="harga" name="harga"placeholder="Masukkan Harga"
+                        value="{{ $data['harga'] }}">
                 </div>
                 <div class="form-group">
-                    <label for="image">Image</label>
-                    <input type="file" name="image" id="image" class="form-control">
+                    <label for="gambar">Image</label>
+                    <input type="file" name="gambar" id="gambar" class="form-control">
                 </div>
-
                 <!-- Tampilkan gambar produk yang sudah ada -->
                 <div class="form-group">
-                    <label for="current_image">Current Image</label>
-                    @if ($data['image'])
-                        <img src="{{ asset('image') }}/{{ $data['image'] }}" alt="Current Image"
+                    <label for="gambar">Current Image</label>
+                    @if ($data['gambar'])
+                        <img src="{{ asset('image') }}/{{ $data['gambar'] }}" alt="gambar"
                             style="max-height: 250px; max-width: 250px;" class="img-thumbnail">
                     @else
                         <p>Tidak ada gambar yang tersedia.</p>
