@@ -26,3 +26,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // Route::delete('produk/{id}', [ProdukController::class, 'destroy']);
 
 Route::apiResource('produk', ProdukController::class);
+Route::post('/checkout', [ProdukController::class, 'checkout']);

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
 use App\Models\Produk;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
 
 use function PHPUnit\Framework\isEmpty;
@@ -209,5 +211,38 @@ class ProdukController extends Controller
                 'message' => "Gagal Hapus Produk!!",
             ], 500);
         }
+    }
+
+    public function checkout(Request $request)
+    {
+
+        $request->request->add(['total_harga' => $request->qty * 1000000, 'status' => 'unpaid']);
+        $order = Order::create($request->all());
+
+        // Set konfigurasi Midtrans
+        \Midtrans\Config::$serverKey = config('midtrans.server_key');
+        \Midtrans\Config::$isProduction = false;
+        \Midtrans\Config::$isSanitized = true;
+        \Midtrans\Config::$is3ds = true;
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => $order->id,
+                'gross_amount' => $order->total_harga,
+            ],
+            'customer_details' => [
+                'nama' => $request->nama,
+                'phone' => $request->phone,
+            ],
+            // Tambahkan informasi pembayaran lainnya jika diperlukan
+        ];
+
+        $snapToken = \Midtrans\Snap::getSnapToken($params);
+
+        // Mengembalikan respons JSON dengan snapToken dan informasi pesanan
+        return response()->json([
+            'snapToken' => $snapToken,
+            'order' => $order,
+        ], 200);
     }
 }
