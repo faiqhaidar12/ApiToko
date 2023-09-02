@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Produk;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
@@ -12,12 +13,23 @@ class OrderController extends Controller
      */
     public function index()
     {
-        return view('home.index');
+        $produk = Produk::all();
+        return view('home.index')->with('produk', $produk);
     }
 
     public function checkout(Request $request)
     {
-        $request->request->add(['total_harga' => $request->qty * 1000000, 'status' => 'unpaid']);
+        // Ambil harga produk dari database berdasarkan product_id (ganti dengan kolom yang sesuai di database Anda)
+        $produk = Produk::find($request->produk_id);
+        $gambar = Produk::all();
+        if (!$produk) {
+            // Handle jika produk tidak ditemukan
+            return redirect()->back()->with('error', 'Produk tidak ditemukan.');
+        }
+        // Hitung total harga berdasarkan kuantitas (qty) dan harga produk
+        $total_harga = $produk->harga * $request->qty;
+
+        $request->request->add(['total_harga' => $total_harga, 'status' => 'unpaid']);
         $order = Order::create($request->all());
 
         // Set your Merchant Server Key
@@ -35,13 +47,44 @@ class OrderController extends Controller
                 'gross_amount' => $order->total_harga,
             ),
             'customer_details' => array(
-                'nama' => $request->nama,
-                'phone' => $request->phone
+                'first_name' => $request->nama,
+                'address' => $request->alamat,
+                'phone' => $request->phone,
             ),
         );
 
         $snapToken = \Midtrans\Snap::getSnapToken($params);
-        return view('checkout.index', compact('snapToken', 'order'));
+        // return view('checkout.index', compact('produk', 'snapToken', 'order', 'gambar', 'request'));
+        return view('checkout.index')
+            ->with('produk', $produk)
+            ->with('snapToken', $snapToken)
+            ->with('order', $order)
+            ->with('gambar', $gambar)
+            ->with('request', $request);
+    }
+
+    public function callback(Request $request)
+    {
+        $serverKey = config('midtrans.server_key');
+        $hashed = hash("sha512", $request->order_id . $request->status_code . $request->gross_amount . $serverKey);
+        if ($hashed == $request->signature_key) {
+            if ($request->transaction_status == 'capture') {
+                $order = Order::find($request->order_id);
+                $order->update(['status' => 'Paid']);
+            } elseif ($request->transaction_status == 'pending') {
+                $order = Order::find($request->order_id);
+                $order->update(['status' => 'Pending']);
+            } elseif ($request->transaction_status == 'settlement') {
+                $order = Order::find($request->order_id);
+                $order->update(['status' => 'Paid']);
+            }
+        }
+    }
+
+    public function invoice($id)
+    {
+        $order = Order::find($id);
+        return view('invoice.index')->with('order', $order);
     }
 
     /**

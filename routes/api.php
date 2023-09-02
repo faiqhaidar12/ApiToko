@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\ProdukController;
+use App\Http\Controllers\OrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -27,3 +28,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::apiResource('produk', ProdukController::class);
 Route::post('/checkout', [ProdukController::class, 'checkout']);
+Route::post('midtrans-callback', [OrderController::class, 'callback']);

@@ -16,4 +16,9 @@ class Produk extends Model
         'harga',
         'gambar'
     ];
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
 }

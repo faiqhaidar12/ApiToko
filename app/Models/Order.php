@@ -15,6 +15,12 @@ class Order extends Model
         'phone',
         'qty',
         'total_harga',
-        'status'
+        'status',
+        'produk_id'
     ];
+
+    public function produk()
+    {
+        return $this->belongsTo(Produk::class);
+    }
 }

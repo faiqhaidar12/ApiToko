@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 
+Route::resource('produk', ProdukController::class);
 Route::resource('/home', OrderController::class);
 Route::post('/checkout', [OrderController::class, 'checkout']);
-Route::resource('produk', ProdukController::class);
+Route::get('/invoice/{id}', [OrderController::class, 'invoice']);

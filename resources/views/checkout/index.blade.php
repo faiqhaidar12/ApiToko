@@ -7,7 +7,12 @@
                 <div class="card-header">MANTAB</div>
                 <div class="card-body">
                     <h5 class="card-title">Asus Rog</h5>
-                    <img src="{{ asset('image/rog.png') }}" alt="gambar" class="img-thumbnail">
+                    @foreach ($gambar as $item)
+                        @if ($item->id == $request->produk_id)
+                            <img src="{{ asset('image/' . $item->gambar) }}" class="img-thumbnail">
+                        @endif
+                    @endforeach
+
                     <div class="card-body">
                         <h4>Detail Pesanan</h4>
                         <div class="text-center">
@@ -30,7 +35,8 @@
                                 </tr>
                                 <tr>
                                     <td>Total Harga</td>
-                                    <td>:{{ $order->total_harga }}</td>
+                                    {{-- <td>:{{ $order->total_harga }}</td> --}}
+                                    <td>Rp {{ number_format($order->total_harga, 2) }}</td>
                                 </tr>
                             </table>
                             <button id="pay-button" class="btn btn-primary">Bayar Sekarang</button>
@@ -50,7 +56,8 @@
             window.snap.pay('{{ $snapToken }}', {
                 onSuccess: function(result) {
                     /* You may add your own implementation here */
-                    alert("payment success!");
+                    // alert("payment success!");
+                    window.location.href = '/invoice/{{ $order->id }}'
                     console.log(result);
                 },
                 onPending: function(result) {
